@@ -22,15 +22,10 @@ jobs:
       - name: Build Spring Boot application
         run: mvn clean install
 
-      - name: Deploy to DigitalOcean
-        uses: appleboy/ssh-action@master
+      - name: Install doctl
+        uses: digitalocean/action-doctl@v2
         with:
-          host: ${{ secrets.DROPLET_IP_ADDRESS }}
-          username: root
-          key: ${{ secrets.SSH_PRIVATE_KEY }}
-          port: 22
-          script: |
-            cd /opt/vitapill
-            git pull origin master
-            mvn spring-boot:stop
-            mvn spring-boot:start
+          token: ${{ secrets.DIGITALOCEAN_ACCESS_TOKEN }}
+
+      - name: Provision Droplet and deploy container
+        run: doctl compute droplet create "VITAPILL01" --image docker-18-04 --size s-1vcpu-1gb --region nyc1 --user-data-file deploy.sh --wait
